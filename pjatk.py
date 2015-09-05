@@ -93,7 +93,8 @@ def pjatk(login, password, pushover_token, pushover_key):
                                                ocena['ocena'],
                                                ocena['data'])
         pushover.send_message(message,
-                              title=message_title)
+                              title=message_title,
+                              url='https://dziekanat.pjwstk.edu.pl/Login.aspx')
     with open('state.json', 'wb') as f:
         json.dump(oceny, f, indent=4)
 
