@@ -1,10 +1,16 @@
+# -*- encoding: utf-8 -*-
 import click
 import requests
 import re
 import json
+from pushover import init, Client
+
 from bs4 import BeautifulSoup
 
-re_postback = re.compile(r'^javascript:__doPostBack\(\'ctl00\$cphMaster\$OcenyGridView\',\'Page\$(\d+)\'\)$')
+re_postback = re.compile(
+    r'^javascript:__doPostBack\(\'ctl00\$cphMaster\$OcenyGridView\',\'Page\$(\d+)\'\)$')
+
+message_title = u'Pojawiła się nowa ocena w dziekanacie PJWSTK'
 
 
 def get_form_events(bs):
@@ -30,7 +36,11 @@ def get_form_events(bs):
 @click.command()
 @click.option('--login', required=True)
 @click.option('--password', required=True)
-def pjatk(login, password):
+@click.option('--pushover-token', required=True)
+@click.option('--pushover-key', required=True)
+def pjatk(login, password, pushover_token, pushover_key):
+    init(pushover_token)
+    pushover = Client(pushover_key, api_token=pushover_token)
     s = requests.Session()
     # Get base values for form
     r = s.get('https://dziekanat.pjwstk.edu.pl/Login.aspx')
@@ -77,9 +87,13 @@ def pjatk(login, password):
         current_oceny = []
 
     if oceny != current_oceny:
+        message = ''
         for ocena in oceny:
-            click.echo(ocena['przedmiot'])
-
+            message += u'{0} {1} {2}\n'.format(ocena['kod'],
+                                               ocena['ocena'],
+                                               ocena['data'])
+        pushover.send_message(message,
+                              title=message_title)
     with open('state.json', 'wb') as f:
         json.dump(oceny, f, indent=4)
 
