@@ -97,6 +97,9 @@ def pjatk(login, password, pushover_token, pushover_key):
     with open('state.json', 'wb') as f:
         json.dump(oceny, f, indent=4)
 
+    r = s.get('https://dziekanat.pjwstk.edu.pl/Logout.aspx')
+    r.raise_for_status()
+
 
 if __name__ == '__main__':
     pjatk(auto_envvar_prefix='PJATK')
