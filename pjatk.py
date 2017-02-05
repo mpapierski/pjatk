@@ -3,7 +3,6 @@ import click
 import requests
 import re
 import json
-from pushover import init, Client
 
 from bs4 import BeautifulSoup
 
@@ -11,6 +10,25 @@ re_postback = re.compile(
     r'^javascript:__doPostBack\(\'ctl00\$cphMaster\$OcenyGridView\',\'Page\$(\d+)\'\)$')
 
 message_title = u'Pojawiła się nowa ocena w dziekanacie PJWSTK'
+
+
+def send_message(title, text, api_key=None, mailgun_domain=None, send_from=None, send_to=None):
+    assert api_key is not None
+    assert mailgun_domain is not None
+    assert send_from is not None
+    assert send_to is not None
+    click.echo('---')
+    click.echo('Send message')
+    click.echo(text)
+    click.echo('---')
+    r = requests.post(
+        "https://api.mailgun.net/v3/{}/messages".format(mailgun_domain),
+        auth=("api", api_key),
+        data={"from": send_from,
+              "to": [send_to],
+              "subject": title,
+              "text": text})
+    r.raise_for_status()
 
 
 def get_form_events(bs):
@@ -36,11 +54,11 @@ def get_form_events(bs):
 @click.command()
 @click.option('--login', required=True)
 @click.option('--password', required=True)
-@click.option('--pushover-token', required=True)
-@click.option('--pushover-key', required=True)
-def pjatk(login, password, pushover_token, pushover_key):
-    init(pushover_token)
-    pushover = Client(pushover_key, api_token=pushover_token)
+@click.option('--api-key', required=True)
+@click.option('--send-from', required=True)
+@click.option('--send-to', required=True)
+@click.option('--mailgun-domain', required=True)
+def pjatk(login, password, api_key, send_from, send_to, mailgun_domain):
     s = requests.Session()
     # Get base values for form
     r = s.get('https://dziekanat.pjwstk.edu.pl/Login.aspx')
@@ -92,9 +110,9 @@ def pjatk(login, password, pushover_token, pushover_key):
             message += u'{0} {1} {2}\n'.format(ocena['kod'],
                                                ocena['ocena'],
                                                ocena['data'])
-        pushover.send_message(message,
-                              title=message_title,
-                              url='https://dziekanat.pjwstk.edu.pl/Login.aspx')
+        send_message(message_title, message,
+                     api_key=api_key, mailgun_domain=mailgun_domain,
+                     send_from=send_from, send_to=send_to)
     with open('state.json', 'wb') as f:
         json.dump(oceny, f, indent=4)
 
