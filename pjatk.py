@@ -3,7 +3,7 @@ import click
 import requests
 import re
 import json
-
+import sys
 from bs4 import BeautifulSoup
 
 re_postback = re.compile(
@@ -72,7 +72,20 @@ def pjatk(login, password, api_key, send_from, send_to, mailgun_domain):
     r = s.post('https://dziekanat.pjwstk.edu.pl/Login.aspx', data=form)
     r.raise_for_status()
     bs = BeautifulSoup(r.content, 'html.parser')
-    el = bs.select('span#cphMaster_LabPowitanie font')[0]
+    try:
+        el = bs.select('span#cphMaster_LabPowitanie font')[0]
+    except Exception as e:
+        try:
+            body = bs.select('body')[0]
+            lines = list(line.strip() for line in body.text.splitlines() if line.strip())
+            for line in lines:
+                click.echo(line)
+            sys.exit(1)
+        except Exception as e:
+            click.echo('Totally unexpected error')
+            with open('error.html', 'wb') as fout:
+                fout.write(r.content)
+                raise
     banner = el.text.strip()
     click.echo(banner)
     # Get all marks
