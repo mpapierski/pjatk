@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>title</title>
+  </head>
+  <body>
+
+        {% for podanie in podania %}
+        ID: {{podanie.wys}}<br/>
+        Typ podania: {{podanie.typ_podania}}<br/>
+        Data złożenia: {{podanie.data_zlozenia}}<br/>
+        <span style="font-family: Courier">{{podanie.uzasadnienie | replace("\n", "<br/>")}}</span><br/>
+        Historia:<br/>
+        <table border="1" style="width:100%;">
+            <tr>
+                <td>
+                    Data
+                </td>
+                <td>Informacja</td>
+                <td>Miejsce</td>
+                <td>Status</td>
+            </tr>
+            {% for historia in podanie.historia %}
+            <tr>
+                <td>
+                    {% if historia.data %}{{historia.data}}{% endif %}
+                </td>
+                <td>
+                    {{historia.informacja}}
+                </td>
+                <td>
+                    {{historia.miejsce_podania}}
+                </td>
+                <td>
+                    {{historia.status}}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br/>
+        {% endfor %}
+        
+        
+          
+  </body>
+</html>
